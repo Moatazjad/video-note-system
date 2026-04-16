@@ -22,7 +22,7 @@
 
 ---
 
-## 🎯 About The Project
+##  About The Project
 
 **Video Note System** is a comprehensive solution designed to bridge the gap between passive listening and active learning. Originally developed as a Bachelor's Thesis Project for Vistula University, this system automates the tedious process of note-taking during activities where manual writing is impossible (like driving or exercising). 
 
@@ -101,121 +101,110 @@
                                            │  Groq API   │
                                            │ (AI Models) │
                                            └─────────────┘
+```
+## ⏱️ Performance Metrics
+* **Transcription** - ~5 seconds per 10-minute audio chunk.
+* **Note Generation** - ~2-3 seconds.
+* **Total Processing** - ~1-2 minutes for a 10-minute video.
+* **Cost** - $0 (Optimized for Groq free tier).
 
+---
 
-Performance Metrics
-Transcription: ~5 seconds per 10-minute audio chunk
+## 🚀 Getting Started
 
-Note Generation: ~2-3 seconds
+### 📋 Prerequisites
+* **Python** - Version 3.11+
+* **Node.js** - Version 18+
+* **PostgreSQL** - Version 14+
+* **Redis** - Version 7+
+* **Media Tools** - FFmpeg
 
-Total Processing: ~1-2 minutes for a 10-minute video
-
-Cost: $0 (Optimized for Groq free tier)
-
-🚀 Getting Started
-Prerequisites
-Python 3.11+
-
-Node.js 18+
-
-PostgreSQL 14+
-
-Redis 7+
-
-FFmpeg
-
-1. Clone the Repository
-Bash
-
+### 1️⃣ Clone the Repository
+```bash
 git clone [https://github.com/Moatazjad/video-note-system.git](https://github.com/Moatazjad/video-note-system.git)
 cd video-note-system
-2. Backend Setup
-Bash
+```
+### Backend Setup
 
+```bash
 cd backend
 python -m venv .venv
-
-# Activate virtual environment
-# Windows: .venv\Scripts\activate 
-# Linux/Mac: source .venv/bin/activate
-
+```
+### Activate virtual environment
+### Windows: .venv\Scripts\activate 
+### Linux/Mac: source .venv/bin/activate
+```
 pip install -r requirements.txt
 cp .env.example .env
-Note: Edit .env and add your GROQ_API_KEY, DATABASE_URL, and REDIS_URL.
+```
 
-Bash
-
-alembic upgrade head
-3. Frontend Setup
-Bash
+### Frontend Setup
+```Bash
 
 cd frontend
 npm install
 cp .env.example .env.local
-Note: Edit .env.local and set your NEXT_PUBLIC_API_URL.
+```
 
-4. Start Services (3 Terminals Required)
-Terminal 1: Backend API
+### Start Services (3 Terminals Required)
+#### Terminal 1: Backend API
 
-Bash
+```Bash
 
 cd backend
 uvicorn app.main:app --reload
-Terminal 2: Celery Worker
+```
+#### Terminal 2: Celery Worker
 
-Bash
+```Bash
 
 cd backend
 celery -A app.core.celery_app worker --pool=solo -l info
-Terminal 3: Frontend
+```
+#### Terminal 3: Frontend
 
-Bash
+```Bash
 
 cd frontend
 npm run dev
-Access the application at http://localhost:3000
+```
+## 📸 Screenshots
 
-📸 Screenshots
-(Replace these lines with actual image tags when you have screenshots ready! Example: <img src="link_to_image.png" width="800">)
+### 🖥️ Application Views
 
-Dashboard Overview
+* **Dashboard Overview**
+  ![Dashboard Overview](https://github.com/user-attachments/assets/8e020ded-9a70-4ce1-8586-8705160d0cbe)
 
+* **Real-Time Progress Tracking**
+  ![Real-Time Progress Tracking](https://github.com/user-attachments/assets/7dcf4459-036a-40f3-9ab9-33b01ae0a292)
 
-(Add screenshot here)
+* **Generated Notes & PDF Export**
 
-Real-Time Progress Tracking
+  ![Generated Notes 1](https://github.com/user-attachments/assets/484fa836-5fe2-4c8a-a8f5-67bc71297442) 
+  ![Generated Notes 2](https://github.com/user-attachments/assets/6921f1d2-89d3-4949-8061-265dd703e855) 
+  ![Generated Notes 3](https://github.com/user-attachments/assets/cc527f17-d008-4ce7-b4a8-22e5220e1436)
 
+---
 
-(Add screenshot here)
+## 🔒 Security & Privacy
 
-Generated Notes & PDF Export
+### 🛡️ System Protections
+* **Environment Isolation** - Secure storage of sensitive API keys via environment variables.
+* **Input Validation** - Client-side URL validation and server-side path traversal protection.
+* **Secure Downloads** - Safe external linking (`noopener`, `noreferrer`).
 
+---
 
-(Add screenshot here)
+## 📄 License
 
-🔒 Security & Privacy
-Environment Isolation - Secure storage of sensitive API keys via environment variables.
+### 📜 Usage Rights
+* **MIT License** - Distributed under the MIT License for educational purposes.
 
-Input Validation - Client-side URL validation and server-side path traversal protection.
+---
 
-Secure Downloads - Safe external linking (noopener, noreferrer).
+## 👤 Author & Acknowledgments
 
-📄 License
-Distributed under the MIT License - For educational purposes.
-
-👤 Author & Acknowledgments
-Moataz Jad Ahmed
-
-Institution: Vistula University, Warsaw (Computer Engineering)
-
-Project: Bachelor's Thesis 2026
-
-GitHub: @Moatazjad
-
-Special Thanks:
-
-Groq for providing exceptional, high-speed free AI API access.
-
-Vistula University for academic support and guidance.
-
-The incredible open-source community behind the tools that made this possible.
+### 🎓 Moataz Ahmed
+* **Institution** - Vistula University, Warsaw (Computer Engineering).
+* **Project** - Bachelor's Thesis 2026.
+* **GitHub** - [@Moatazjad](https://github.com/Moatazjad).
