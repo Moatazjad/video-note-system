@@ -1,82 +1,89 @@
-Video Note System 
+<div align="center">
+  <img src="https://cdn-icons-png.flaticon.com/512/3304/3304323.png" alt="Logo" width="150" height="150">
 
-An automated system for processing YouTube videos and generating structured educational notes. Supports English and Arabic content with real-time progress tracking.
+  <p><b>An automated system for processing YouTube videos and generating structured educational notes.</b></p>
 
-Features • Tech Stack • Architecture • Getting Started • Screenshots
+  <p>
+    <img src="https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js" alt="Next.js">
+    <img src="https://img.shields.io/badge/Python-3.11-blue?style=flat-square&logo=python" alt="Python">
+    <img src="https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat-square&logo=fastapi" alt="FastAPI">
+    <img src="https://img.shields.io/badge/PostgreSQL-14-4169E1?style=flat-square&logo=postgresql" alt="PostgreSQL">
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="License">
+  </p>
 
-🎯 About The Project
-Video Note System is a comprehensive solution designed to bridge the gap between passive listening and active learning. Originally developed as a Bachelor's Thesis Project for Vistula University, this system automates the tedious process of note-taking during activities where manual writing is impossible (like driving or exercising).
+  <p>
+    <a href="#-features">Features</a> •
+    <a href="#-tech-stack">Tech Stack</a> •
+    <a href="#-architecture--performance">Architecture</a> •
+    <a href="#-getting-started">Getting Started</a> •
+    <a href="#-screenshots">Screenshots</a>
+  </p>
+</div>
 
-Why Video Note System?
-✅ Seamless YouTube Integration - Direct URL processing with time segmentation
-✅ Multi-language & RTL Support - Full support for English and Arabic text
-✅ Smart AI Generation - Template-based notes (Educational, Business, Research)
-✅ Real-time Progress Tracking - Live status updates and graceful task cancellation
-✅ Dual Format Export - Download structured notes in Markdown or PDF
-✅ Production-Ready - Built with smart retries, error handling, and resource cleanup
+---
 
-✨ Features
-📹 Video & Audio Processing
+## 🎯 About The Project
 
-Direct Processing - Download and extract audio seamlessly via yt-dlp and FFmpeg.
+**Video Note System** is a comprehensive solution designed to bridge the gap between passive listening and active learning. Originally developed as a Bachelor's Thesis Project for Vistula University, this system automates the tedious process of note-taking during activities where manual writing is impossible (like driving or exercising). 
 
-Time Segmentation - Process specific chunks of long-form video content.
+### Why Video Note System?
 
-AI Transcription - High-accuracy speech-to-text using Groq Whisper Large-v3.
+* ✅ **Seamless YouTube Integration** - Direct URL processing with time segmentation
+* ✅ **Multi-language & RTL Support** - Full support for English and Arabic text
+* ✅ **Smart AI Generation** - Template-based notes (Educational, Business, Research)
+* ✅ **Real-time Progress Tracking** - Live status updates and graceful task cancellation
+* ✅ **Dual Format Export** - Download structured notes in Markdown or PDF
+* ✅ **Production-Ready** - Built with smart retries, error handling, and resource cleanup
 
-🧠 AI Note Generation
+---
 
-Contextual Understanding - Powered by Groq LLaMA 3.3 70B for deep comprehension.
+## ✨ Features
 
-Custom Templates - Automatically structure notes for different contexts (Education, Business, Research).
+### 📹 Video & Audio Processing
+* **Direct Processing** - Download and extract audio seamlessly via yt-dlp and FFmpeg.
+* **Time Segmentation** - Process specific chunks of long-form video content.
+* **AI Transcription** - High-accuracy speech-to-text using Groq Whisper Large-v3.
 
-Language Agnostic - Accurately generate notes in the video's native language.
+### 🧠 AI Note Generation
+* **Contextual Understanding** - Powered by Groq LLaMA 3.3 70B for deep comprehension.
+* **Custom Templates** - Automatically structure notes for different contexts (Education, Business, Research).
+* **Language Agnostic** - Accurately generate notes in the video's native language.
 
-📄 Export & Localization
+### 📄 Export & Localization
+* **PDF Generation** - High-quality PDF exports using ReportLab.
+* **RTL Rendering** - Native Arabic font support, bidirectional text processing, and reshaping.
+* **Markdown Export** - Clean, developer-friendly Markdown files.
 
-PDF Generation - High-quality PDF exports using ReportLab.
+### 🛡️ Enterprise-Grade Reliability
+* **Soft Cancellation** - 7 cancellation checkpoints with graceful resource cleanup.
+* **Smart Error Handling** - Exponential backoff retries for transient vs. permanent errors.
+* **Race Condition Prevention** - Row-level database locking for stable task management.
 
-RTL Rendering - Native Arabic font support, bidirectional text processing, and reshaping.
+---
 
-Markdown Export - Clean, developer-friendly Markdown files.
+## 🛠 Tech Stack
 
-🛡️ Enterprise-Grade Reliability
+**Backend & AI Services**
+* **Python 3.11 & FastAPI** - High-performance async backend framework.
+* **Celery** - Distributed task queue for asynchronous processing.
+* **Groq API** - Whisper Large-v3 (Transcription) & LLaMA 3.3 70B (Generation).
+* **PostgreSQL 14 & SQLAlchemy** - Relational database and ORM.
+* **Redis 7** - Fast in-memory message broker.
+* **Processing Tools** - yt-dlp, FFmpeg, ReportLab, Arabic-reshaper.
 
-Soft Cancellation - 7 cancellation checkpoints with graceful resource cleanup.
+**Frontend**
+* **Next.js 14** - React framework using the modern App Router.
+* **TypeScript** - Strict type-checking for scalable frontend architecture.
+* **Tailwind CSS** - Utility-first styling for rapid UI development.
+* **Axios** - Promise-based HTTP client.
 
-Smart Error Handling - Exponential backoff retries for transient vs. permanent errors.
+---
 
-Race Condition Prevention - Row-level database locking for stable task management.
+## 📐 Architecture & Performance
 
-🛠 Tech Stack
-Backend & AI Services
+### System Design
 
-Python 3.11 & FastAPI - High-performance async backend framework.
-
-Celery - Distributed task queue for asynchronous processing.
-
-Groq API - Whisper Large-v3 (Transcription) & LLaMA 3.3 70B (Generation).
-
-PostgreSQL 14 & SQLAlchemy - Relational database and ORM.
-
-Redis 7 - Fast in-memory message broker.
-
-Processing Tools - yt-dlp, FFmpeg, ReportLab, Arabic-reshaper.
-
-Frontend
-
-Next.js 14 - React framework using the modern App Router.
-
-TypeScript - Strict type-checking for scalable frontend architecture.
-
-Tailwind CSS - Utility-first styling for rapid UI development.
-
-Axios - Promise-based HTTP client.
-
-📐 Architecture & Performance
-System Design
-Plaintext
-
+```text
 ┌─────────────┐      ┌──────────────┐      ┌─────────────┐
 │   Next.js   │ HTTP │   FastAPI    │      │   Celery    │
 │  Frontend   │─────▶│   Backend    │─────▶│   Worker    │
@@ -94,6 +101,8 @@ Plaintext
                                            │  Groq API   │
                                            │ (AI Models) │
                                            └─────────────┘
+
+
 Performance Metrics
 Transcription: ~5 seconds per 10-minute audio chunk
 
@@ -118,7 +127,7 @@ FFmpeg
 1. Clone the Repository
 Bash
 
-git clone https://github.com/Moatazjad/video-note-system.git
+git clone [https://github.com/Moatazjad/video-note-system.git](https://github.com/Moatazjad/video-note-system.git)
 cd video-note-system
 2. Backend Setup
 Bash
@@ -167,16 +176,22 @@ npm run dev
 Access the application at http://localhost:3000
 
 📸 Screenshots
-(Replace these with actual images/GIFs of your project!)
+(Replace these lines with actual image tags when you have screenshots ready! Example: <img src="link_to_image.png" width="800">)
 
 Dashboard Overview
-[Insert Screenshot of the Next.js UI showing the URL input area]
+
+
+(Add screenshot here)
 
 Real-Time Progress Tracking
-<img width="2141" height="1245" alt="2" src="https://github.com/user-attachments/assets/31d58063-eedb-4906-8c33-1867c48f0075" />
+
+
+(Add screenshot here)
 
 Generated Notes & PDF Export
-[Insert Screenshot of the dual-pane view or the generated Arabic PDF showing RTL text]
+
+
+(Add screenshot here)
 
 🔒 Security & Privacy
 Environment Isolation - Secure storage of sensitive API keys via environment variables.
