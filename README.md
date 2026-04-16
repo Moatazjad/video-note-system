@@ -1,502 +1,206 @@
-\# Video Note System
+Video Note System 
 
+An automated system for processing YouTube videos and generating structured educational notes. Supports English and Arabic content with real-time progress tracking.
 
+Features • Tech Stack • Architecture • Getting Started • Screenshots
 
-\*\*Bachelor's Thesis Project\*\*  
+🎯 About The Project
+Video Note System is a comprehensive solution designed to bridge the gap between passive listening and active learning. Originally developed as a Bachelor's Thesis Project for Vistula University, this system automates the tedious process of note-taking during activities where manual writing is impossible (like driving or exercising).
 
-Computer Engineering, Vistula University, Warsaw  
+Why Video Note System?
+✅ Seamless YouTube Integration - Direct URL processing with time segmentation
+✅ Multi-language & RTL Support - Full support for English and Arabic text
+✅ Smart AI Generation - Template-based notes (Educational, Business, Research)
+✅ Real-time Progress Tracking - Live status updates and graceful task cancellation
+✅ Dual Format Export - Download structured notes in Markdown or PDF
+✅ Production-Ready - Built with smart retries, error handling, and resource cleanup
 
-\*\*Author:\*\* Moataz Jad Ahmed  
+✨ Features
+📹 Video & Audio Processing
 
-\*\*Year:\*\* 2026
+Direct Processing - Download and extract audio seamlessly via yt-dlp and FFmpeg.
 
+Time Segmentation - Process specific chunks of long-form video content.
 
+AI Transcription - High-accuracy speech-to-text using Groq Whisper Large-v3.
 
----
+🧠 AI Note Generation
 
+Contextual Understanding - Powered by Groq LLaMA 3.3 70B for deep comprehension.
 
+Custom Templates - Automatically structure notes for different contexts (Education, Business, Research).
 
-\## Project Overview
+Language Agnostic - Accurately generate notes in the video's native language.
 
+📄 Export & Localization
 
+PDF Generation - High-quality PDF exports using ReportLab.
 
-An automated system for processing YouTube videos and generating structured educational notes. Supports English and Arabic content with real-time progress tracking and multi-format export.
+RTL Rendering - Native Arabic font support, bidirectional text processing, and reshaping.
 
+Markdown Export - Clean, developer-friendly Markdown files.
 
+🛡️ Enterprise-Grade Reliability
 
-\### Problem Statement
+Soft Cancellation - 7 cancellation checkpoints with graceful resource cleanup.
 
-Taking notes while driving or during activities that prevent manual note-taking is challenging. This system automates the process by:
+Smart Error Handling - Exponential backoff retries for transient vs. permanent errors.
 
-\- Downloading YouTube videos
+Race Condition Prevention - Row-level database locking for stable task management.
 
-\- Extracting and transcribing audio
+🛠 Tech Stack
+Backend & AI Services
 
-\- Generating structured notes using AI
+Python 3.11 & FastAPI - High-performance async backend framework.
 
-\- Exporting to Markdown and PDF formats
+Celery - Distributed task queue for asynchronous processing.
 
+Groq API - Whisper Large-v3 (Transcription) & LLaMA 3.3 70B (Generation).
 
+PostgreSQL 14 & SQLAlchemy - Relational database and ORM.
 
----
+Redis 7 - Fast in-memory message broker.
 
+Processing Tools - yt-dlp, FFmpeg, ReportLab, Arabic-reshaper.
 
+Frontend
 
-\## Key Features
+Next.js 14 - React framework using the modern App Router.
 
+TypeScript - Strict type-checking for scalable frontend architecture.
 
+Tailwind CSS - Utility-first styling for rapid UI development.
 
-\- YouTube Integration - Direct URL processing with time segmentation
+Axios - Promise-based HTTP client.
 
-\- Multi-language Support - English and Arabic with RTL rendering
-
-\- AI-Powered Transcription - Groq Whisper Large-v3
-
-\- Smart Note Generation - Template-based (Educational, Business, Research)
-
-\- Real-time Progress - Live status updates and cancellation
-
-\- Dual Export - Markdown + PDF with Arabic font support
-
-\- Production-Ready - Error handling, retries, resource cleanup
-
-
-
----
-
-
-
-\## Architecture
-
-
-
-\### System Design
-
-```
+📐 Architecture & Performance
+System Design
+Plaintext
 
 ┌─────────────┐      ┌──────────────┐      ┌─────────────┐
-
 │   Next.js   │ HTTP │   FastAPI    │      │   Celery    │
-
 │  Frontend   │─────▶│   Backend    │─────▶│   Worker    │
-
 │ (TypeScript)│      │   (Python)   │      │  (Async)    │
-
 └─────────────┘      └──────────────┘      └─────────────┘
+       │                    │                     │
+       ▼                    ▼                     ▼
+┌──────────────┐     ┌──────────────┐      ┌─────────────┐
+│    Client    │     │ PostgreSQL   │      │   Redis     │
+│   Browser    │     │  Database    │      │   Queue     │
+└──────────────┘     └──────────────┘      └─────────────┘
+                                                  │
+                                                  ▼
+                                           ┌─────────────┐
+                                           │  Groq API   │
+                                           │ (AI Models) │
+                                           └─────────────┘
+Performance Metrics
+Transcription: ~5 seconds per 10-minute audio chunk
 
-&nbsp;                           │                      │
+Note Generation: ~2-3 seconds
 
-&nbsp;                           ▼                      ▼
+Total Processing: ~1-2 minutes for a 10-minute video
 
-&nbsp;                    ┌──────────────┐      ┌─────────────┐
+Cost: $0 (Optimized for Groq free tier)
 
-&nbsp;                    │ PostgreSQL   │      │   Redis     │
+🚀 Getting Started
+Prerequisites
+Python 3.11+
 
-&nbsp;                    │  Database    │      │   Queue     │
+Node.js 18+
 
-&nbsp;                    └──────────────┘      └─────────────┘
+PostgreSQL 14+
 
-&nbsp;                                                 │
+Redis 7+
 
-&nbsp;                                                 ▼
+FFmpeg
 
-&nbsp;                                         ┌─────────────┐
-
-&nbsp;                                         │ Groq API    │
-
-&nbsp;                                         │ (AI Models) │
-
-&nbsp;                                         └─────────────┘
-
-```
-
-
-
-\### Tech Stack
-
-
-
-\*\*Frontend:\*\*
-
-\- Next.js 14 (App Router)
-
-\- TypeScript (strict mode)
-
-\- React Hooks
-
-\- Tailwind CSS
-
-\- Axios
-
-
-
-\*\*Backend:\*\*
-
-\- FastAPI (async)
-
-\- Celery (task queue)
-
-\- PostgreSQL (persistence)
-
-\- Redis (message broker)
-
-\- SQLAlchemy (ORM)
-
-\- Alembic (migrations)
-
-
-
-\*\*AI Services:\*\*
-
-\- Groq Whisper Large-v3 (transcription)
-
-\- Groq LLaMA 3.3 70B (note generation)
-
-
-
-\*\*Processing:\*\*
-
-\- yt-dlp (video download)
-
-\- FFmpeg (audio extraction)
-
-\- ReportLab (PDF generation)
-
-\- Arabic-reshaper \& python-bidi (RTL support)
-
-
-
----
-
-
-
-\## Project Structure
-
-```
-
-Video-Note-System/
-
-├── backend/
-
-│   ├── app/
-
-│   │   ├── api/              # FastAPI routes
-
-│   │   ├── core/             # Config, database, Celery
-
-│   │   ├── models/           # SQLAlchemy models
-
-│   │   ├── services/         # Business logic layer
-
-│   │   └── tasks/            # Celery tasks
-
-│   ├── alembic/              # Database migrations
-
-│   ├── requirements.txt
-
-│   └── .env.example
-
-├── frontend/
-
-│   ├── src/
-
-│   │   ├── app/              # Next.js pages
-
-│   │   ├── components/       # React components
-
-│   │   ├── hooks/            # Custom hooks
-
-│   │   ├── lib/              # API client, utilities
-
-│   │   └── types/            # TypeScript definitions
-
-│   ├── package.json
-
-│   └── .env.example
-
-└── README.md
-
-```
-
-
-
----
-
-
-
-\## Setup Instructions
-
-
-
-\### Prerequisites
-
-\- Python 3.11+
-
-\- Node.js 18+
-
-\- PostgreSQL 14+
-
-\- Redis 7+
-
-\- FFmpeg
-
-
-
-\### 1. Clone Repository
-
-```bash
+1. Clone the Repository
+Bash
 
 git clone https://github.com/Moatazjad/video-note-system.git
-
 cd video-note-system
-
-```
-
-
-
-\### 2. Backend Setup
-
-```bash
+2. Backend Setup
+Bash
 
 cd backend
-
-
-
-\# Create virtual environment
-
 python -m venv .venv
 
-.venv\\Scripts\\activate  # Windows
-
-source .venv/bin/activate  # Linux/Mac
-
-
-
-\# Install dependencies
+# Activate virtual environment
+# Windows: .venv\Scripts\activate 
+# Linux/Mac: source .venv/bin/activate
 
 pip install -r requirements.txt
-
-
-
-\# Configure environment
-
 cp .env.example .env
+Note: Edit .env and add your GROQ_API_KEY, DATABASE_URL, and REDIS_URL.
 
-\# Edit .env and add:
-
-\# - GROQ\_API\_KEY (get from https://console.groq.com)
-
-\# - DATABASE\_URL
-
-\# - REDIS\_URL
-
-
-
-\# Run database migrations
+Bash
 
 alembic upgrade head
-
-```
-
-
-
-\### 3. Frontend Setup
-
-```bash
+3. Frontend Setup
+Bash
 
 cd frontend
-
-
-
-\# Install dependencies
-
 npm install
-
-
-
-\# Configure environment
-
 cp .env.example .env.local
+Note: Edit .env.local and set your NEXT_PUBLIC_API_URL.
 
-\# Edit .env.local and set NEXT\_PUBLIC\_API\_URL
+4. Start Services (3 Terminals Required)
+Terminal 1: Backend API
 
-```
-
-
-
-\### 4. Start Services
-
-
-
-\*\*Terminal 1 - Backend:\*\*
-
-```bash
+Bash
 
 cd backend
-
 uvicorn app.main:app --reload
+Terminal 2: Celery Worker
 
-```
-
-
-
-\*\*Terminal 2 - Celery Worker:\*\*
-
-```bash
+Bash
 
 cd backend
+celery -A app.core.celery_app worker --pool=solo -l info
+Terminal 3: Frontend
 
-celery -A app.core.celery\_app worker --pool=solo -l info
-
-```
-
-
-
-\*\*Terminal 3 - Frontend:\*\*
-
-```bash
+Bash
 
 cd frontend
-
 npm run dev
+Access the application at http://localhost:3000
 
-```
+📸 Screenshots
+(Replace these with actual images/GIFs of your project!)
 
+Dashboard Overview
+[Insert Screenshot of the Next.js UI showing the URL input area]
 
+Real-Time Progress Tracking
+<img width="2141" height="1245" alt="2" src="https://github.com/user-attachments/assets/31d58063-eedb-4906-8c33-1867c48f0075" />
 
-\*\*Access:\*\* http://localhost:3000
+Generated Notes & PDF Export
+[Insert Screenshot of the dual-pane view or the generated Arabic PDF showing RTL text]
 
+🔒 Security & Privacy
+Environment Isolation - Secure storage of sensitive API keys via environment variables.
 
+Input Validation - Client-side URL validation and server-side path traversal protection.
 
----
+Secure Downloads - Safe external linking (noopener, noreferrer).
 
+📄 License
+Distributed under the MIT License - For educational purposes.
 
+👤 Author & Acknowledgments
+Moataz Jad Ahmed
 
-\## Academic Contributions
+Institution: Vistula University, Warsaw (Computer Engineering)
 
+Project: Bachelor's Thesis 2026
 
+GitHub: @Moatazjad
 
-\### Key Implementation Patterns
+Special Thanks:
 
+Groq for providing exceptional, high-speed free AI API access.
 
+Vistula University for academic support and guidance.
 
-1\. \*\*Soft Cancellation Architecture\*\*
-
-&nbsp;  - Database-driven state management
-
-&nbsp;  - 7 cancellation checkpoints
-
-&nbsp;  - Graceful resource cleanup
-
-
-
-2\. \*\*Production Error Handling\*\*
-
-&nbsp;  - Smart retry with exponential backoff
-
-&nbsp;  - Transient vs permanent error distinction
-
-&nbsp;  - Row-level locking for race conditions
-
-
-
-3\. \*\*Frontend Architecture\*\*
-
-&nbsp;  - Separation of concerns (Hook + Components)
-
-&nbsp;  - Stable service interfaces
-
-&nbsp;  - Type-safe state machines
-
-
-
-4\. \*\*Multi-language Support\*\*
-
-&nbsp;  - RTL rendering for Arabic
-
-&nbsp;  - Font family registration for PDF
-
-&nbsp;  - Bidirectional text processing
-
-
-
----
-
-
-
-\## Performance Metrics
-
-
-
-\- \*\*Transcription:\*\* ~5 seconds per 10-minute audio chunk
-
-\- \*\*Note Generation:\*\* ~2-3 seconds
-
-\- \*\*Total Processing:\*\* ~1-2 minutes for 10-minute video
-
-\- \*\*Cost:\*\* $0 (using Groq free tier)
-
-
-
----
-
-
-
-\## Security \& Privacy
-
-
-
-\- Environment variables for sensitive data
-
-\- Path validation against directory traversal
-
-\- Client-side URL validation
-
-\- Secure download links (noopener, noreferrer)
-
-
-
----
-
-
-
-\## License
-
-
-
-MIT License - For educational purposes
-
-
-
----
-
-
-
-\## Author
-
-
-
-\*\*Moataz Jad Ahmed\*\*  
-
-Vistula University, Warsaw  
-
-Computer Engineering  
-
-Bachelor's Thesis 2026
-
-
-
----
-
-
-
-\## Acknowledgments
-
-
-
-\- Groq - For free AI API access
-
-\- Vistula University - Academic support
-
-\- Open Source Community - Technologies used
-
+The incredible open-source community behind the tools that made this possible.
