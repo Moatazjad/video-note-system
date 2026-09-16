@@ -45,7 +45,19 @@ class Settings(BaseSettings):
 
     @property
     def YT_DLP_COOKIEFILE(self) -> str | None:
-        return str(self.YT_COOKIES_FILE) if self.YT_COOKIES_FILE.is_file() else None
+        # Render's Secret Files mount is read-only, but yt-dlp writes updated
+        # cookies back to its cookiefile after every request -- so we copy it
+        # to a writable path first rather than pointing yt-dlp at the secret
+        # directly (which fails with "Read-only file system").
+        if not self.YT_COOKIES_FILE.is_file():
+            return None
+        writable_copy = Path("/tmp/youtube_cookies.txt")
+        if (
+            not writable_copy.is_file()
+            or writable_copy.stat().st_mtime < self.YT_COOKIES_FILE.stat().st_mtime
+        ):
+            writable_copy.write_bytes(self.YT_COOKIES_FILE.read_bytes())
+        return str(writable_copy)
 
     @property
     def CORS_ORIGINS(self) -> List[str]:
