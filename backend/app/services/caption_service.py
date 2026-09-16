@@ -3,6 +3,7 @@ from typing import Optional, Tuple, List, Dict
 
 import yt_dlp
 
+from app.core.config import settings
 from app.utils.vtt_parser import parse_vtt, segments_to_text
 
 logger = logging.getLogger(__name__)
@@ -49,6 +50,8 @@ def get_captions(
         "writeautomaticsub": True,
         "subtitleslangs": [language],
         "extractor_args": {"youtube": {"player_client": ["android", "web"]}},
+        "cookiefile": settings.YT_DLP_COOKIEFILE,
+        "remote_components": ["ejs:github"],
     }
 
     try:

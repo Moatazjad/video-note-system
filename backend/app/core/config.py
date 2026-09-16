@@ -38,6 +38,15 @@ class Settings(BaseSettings):
     LOG_DIR: Path = BASE_DIR / "logs"
     FONT_DIR: Path = BASE_DIR / "fonts"
 
+    # Render mounts "Secret Files" at /etc/secrets/<filename>. When present,
+    # yt-dlp authenticates as this YouTube account instead of hitting the
+    # "Sign in to confirm you're not a bot" wall that datacenter IPs get.
+    YT_COOKIES_FILE: Path = Path("/etc/secrets/youtube_cookies.txt")
+
+    @property
+    def YT_DLP_COOKIEFILE(self) -> str | None:
+        return str(self.YT_COOKIES_FILE) if self.YT_COOKIES_FILE.is_file() else None
+
     @property
     def CORS_ORIGINS(self) -> List[str]:
         value = self.CORS_ORIGINS_RAW.strip()
