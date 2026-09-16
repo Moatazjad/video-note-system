@@ -49,7 +49,6 @@ def get_captions(
         "no_warnings": True,
         "writeautomaticsub": True,
         "subtitleslangs": [language],
-        "extractor_args": {"youtube": {"player_client": ["android", "web"]}},
         "cookiefile": settings.YT_DLP_COOKIEFILE,
         "remote_components": ["ejs:github"],
     }
