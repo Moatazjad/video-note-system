@@ -8,6 +8,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BASE_DIR))
 
+from app.core.config import settings
 from app.core.database import Base
 import app.models.database_schema
 
@@ -20,7 +21,10 @@ target_metadata = Base.metadata
 
 
 def run_migrations_offline():
-    url = config.get_main_option("sqlalchemy.url")
+    # Always use the app's real DATABASE_URL (env var), never the
+    # placeholder baked into alembic.ini -- that value is only a local-dev
+    # fallback and must never be relied on for real deployments.
+    url = settings.DATABASE_URL
 
     context.configure(
         url=url,
@@ -34,8 +38,11 @@ def run_migrations_offline():
 
 
 def run_migrations_online():
+    configuration = config.get_section(config.config_ini_section) or {}
+    configuration["sqlalchemy.url"] = settings.DATABASE_URL
+
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
+        configuration,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
