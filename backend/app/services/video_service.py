@@ -9,8 +9,8 @@ class VideoService:
     @staticmethod
     def get_duration(url: str) -> float:
         ydl_opts = {
-            "quiet": not settings.DEBUG,
-            "no_warnings": not settings.DEBUG,
+            "quiet": False,
+            "no_warnings": False,
             "skip_download": True,
             "cookiefile": settings.YT_DLP_COOKIEFILE,
             "remote_components": ["ejs:github"],
@@ -46,8 +46,8 @@ class VideoService:
                     "preferredquality": "0",
                 }
             ],
-            "quiet": not settings.DEBUG,
-            "no_warnings": not settings.DEBUG,
+            "quiet": False,
+            "no_warnings": False,
             "cookiefile": settings.YT_DLP_COOKIEFILE,
             "remote_components": ["ejs:github"],
         }
@@ -82,8 +82,8 @@ class VideoService:
             "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
             "merge_output_format": "mp4",
             "outtmpl": str(output_dir / "%(id)s.%(ext)s"),
-            "quiet": not settings.DEBUG,
-            "no_warnings": not settings.DEBUG,
+            "quiet": False,
+            "no_warnings": False,
             "cookiefile": settings.YT_DLP_COOKIEFILE,
             "remote_components": ["ejs:github"],
         }

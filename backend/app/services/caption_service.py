@@ -45,8 +45,8 @@ def get_captions(
 
     ydl_opts = {
         "skip_download": True,
-        "quiet": True,
-        "no_warnings": True,
+        "quiet": False,
+        "no_warnings": False,
         "writeautomaticsub": True,
         "subtitleslangs": [language],
         "cookiefile": settings.YT_DLP_COOKIEFILE,
