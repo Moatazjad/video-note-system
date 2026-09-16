@@ -1,5 +1,6 @@
+import json
 from pydantic_settings import BaseSettings
-from pydantic import field_validator
+from pydantic import Field
 from typing import List
 from pathlib import Path
 
@@ -14,7 +15,15 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
 
     API_V1_PREFIX: str = "/api/v1"
-    CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+
+    # A plain `str` field (not List[str]) so pydantic-settings never tries
+    # to auto-JSON-decode the raw env var before our own parsing runs --
+    # that auto-decode happens at the settings-SOURCE level, before any
+    # field_validator gets a chance to run, and crashes on a plain
+    # comma-separated value like "http://localhost:3000" (only a
+    # JSON-array-bracketed string would have survived it). Accepts either
+    # a JSON array string or a comma-separated string.
+    CORS_ORIGINS_RAW: str = Field(default="http://localhost:3000", alias="CORS_ORIGINS")
 
     DATABASE_URL: str
     REDIS_URL: str
@@ -29,15 +38,17 @@ class Settings(BaseSettings):
     LOG_DIR: Path = BASE_DIR / "logs"
     FONT_DIR: Path = BASE_DIR / "fonts"
 
-    @field_validator("CORS_ORIGINS", mode="before")
-    def parse_cors_origins(cls, value):
-        if isinstance(value, str):
-            return [origin.strip() for origin in value.split(",")]
-        return value
+    @property
+    def CORS_ORIGINS(self) -> List[str]:
+        value = self.CORS_ORIGINS_RAW.strip()
+        if value.startswith("["):
+            return json.loads(value)
+        return [origin.strip() for origin in value.split(",") if origin.strip()]
 
     class Config:
         env_file = ".env"
         case_sensitive = True
+        populate_by_name = True
 
 
 settings = Settings()
