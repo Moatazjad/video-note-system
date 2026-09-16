@@ -48,6 +48,7 @@ def get_captions(
         "no_warnings": True,
         "writeautomaticsub": True,
         "subtitleslangs": [language],
+        "extractor_args": {"youtube": {"player_client": ["android", "web"]}},
     }
 
     try:

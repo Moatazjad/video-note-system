@@ -12,6 +12,7 @@ class VideoService:
             "quiet": not settings.DEBUG,
             "no_warnings": not settings.DEBUG,
             "skip_download": True,
+            "extractor_args": {"youtube": {"player_client": ["android", "web"]}},
         }
 
         try:
@@ -46,6 +47,7 @@ class VideoService:
             ],
             "quiet": not settings.DEBUG,
             "no_warnings": not settings.DEBUG,
+            "extractor_args": {"youtube": {"player_client": ["android", "web"]}},
         }
 
         if start_time is not None and end_time is not None:
@@ -80,6 +82,7 @@ class VideoService:
             "outtmpl": str(output_dir / "%(id)s.%(ext)s"),
             "quiet": not settings.DEBUG,
             "no_warnings": not settings.DEBUG,
+            "extractor_args": {"youtube": {"player_client": ["android", "web"]}},
         }
 
         try:
