@@ -1,5 +1,11 @@
 import axios, { AxiosError } from 'axios';
-import type { VideoProcessRequest, VideoStatus, VideoResult, JobStatus } from '@/types/video';
+import type {
+  VideoProcessRequest,
+  VideoStatus,
+  VideoResult,
+  JobStatus,
+  ChatMessage,
+} from '@/types/video';
 
 // Fail fast - no silent fallbacks in production
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -66,6 +72,21 @@ export const api = {
 
   getDownloadUrl(path: string): string {
     return `${BASE_URL}${path}`;
+  },
+
+  async translateNotes(videoId: number, targetLanguage: 'en' | 'ar'): Promise<{ language: string; content: string }> {
+    const response = await client.post(`/translate/${videoId}`, { target_language: targetLanguage });
+    return response.data;
+  },
+
+  async sendChatMessage(videoId: number, message: string): Promise<ChatMessage> {
+    const response = await client.post<ChatMessage>(`/chat/${videoId}`, { message });
+    return response.data;
+  },
+
+  async getChatHistory(videoId: number): Promise<ChatMessage[]> {
+    const response = await client.get<{ messages: ChatMessage[] }>(`/chat/${videoId}`);
+    return response.data.messages;
   },
 };
 

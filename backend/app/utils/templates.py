@@ -5,275 +5,140 @@ SUPPORTED_LANGUAGES = {"en", "ar"}
 
 
 # =========================
-# EDUCATIONAL
+# SECTION-SCOPED TEMPLATES
+#
+# Used per topic-section rather than for the whole document -- a separate
+# assembly step supplies the "## <section title>" heading, so these
+# instructions must make the model start directly with body content and
+# never echo a heading/label of its own (a real bug found in testing: an
+# earlier version of this instruction showed a literal "## Section Title"
+# example, and the model echoed that literal placeholder back as output).
 # =========================
 
-def get_educational_template_en() -> str:
-    return """Create structured, high-clarity learning notes from the transcript.
+def get_educational_section_template_en() -> str:
+    return """Write the detailed notes for THIS transcript section only. A
+separate assembly step will place your output under its own section
+heading, so start directly with the body content -- do not output any
+heading, title, or label of your own (no "#", "##", or similar) anywhere
+in your response.
 
 Rules:
-- No filler.
-- No repetition.
-- Focus on clarity and depth.
-- Use precise explanations.
-- Do not invent information.
-
-Structure:
-
-# Clear, Specific Title
-
-## Core Idea
-Explain the central concept in 3–5 strong sentences.
-
-## Key Principles
-- Principle — short explanation
-- Principle — short explanation
-- Principle — short explanation
-
-## Deep Explanation
-Break the topic into logical sections.
-Use clear headings.
-Explain mechanisms, reasoning, and cause-effect relationships.
-
-## Examples (If Present)
-Summarize practical examples mentioned in the transcript.
-
-## Practical Insights
-Actionable understanding someone can apply immediately.
-
-## Summary in 5 Bullet Points
-- ...
-- ...
-- ...
-- ...
-- ...
+- No filler, no repetition, no invented information.
+- Write in clear, precise Markdown paragraphs and bullet lists.
+- Explain the core idea(s) of this section, key principles, and any
+  concrete examples mentioned.
+- End with 1–3 short "Key takeaway" bullet points scoped to this section.
 """
 
 
-def get_educational_template_ar() -> str:
-    return """أنشئ ملاحظات تعليمية واضحة وعميقة من النص.
+def get_educational_section_template_ar() -> str:
+    return """اكتب الملاحظات التفصيلية لهذا الجزء من النص فقط. خطوة تجميع
+منفصلة ستضع ناتجك تحت عنوان القسم الخاص بها، فابدأ مباشرة بالمحتوى نفسه —
+لا تكتب أي عنوان أو تصنيف خاص بك (لا تستخدم رمز # أو ## أو ما شابه) في أي
+مكان من إجابتك.
 
 القواعد:
-- بدون حشو.
-- بدون تكرار.
-- وضوح ودقة.
-- لا تخترع معلومات غير موجودة.
-
-البنية:
-
-# عنوان واضح ومحدد
-
-## الفكرة الأساسية
-اشرح المفهوم الرئيسي في 3–5 جمل قوية.
-
-## المبادئ الرئيسية
-- مبدأ — شرح مختصر
-- مبدأ — شرح مختصر
-- مبدأ — شرح مختصر
-
-## شرح متعمق
-قسّم الموضوع إلى أقسام منطقية.
-استخدم عناوين واضحة.
-اشرح الآليات والعلاقات السببية.
-
-## أمثلة (إن وجدت)
-لخّص الأمثلة العملية المذكورة.
-
-## تطبيق عملي
-كيف يمكن الاستفادة من المعلومات مباشرة؟
-
-## ملخص في 5 نقاط
-- ...
-- ...
-- ...
-- ...
-- ...
+- بدون حشو، بدون تكرار، بدون معلومات مختلقة.
+- اكتب بأسلوب عربي طبيعي وسليم لغويًا، لا كأنه ترجمة حرفية عن الإنجليزية.
+- اشرح الفكرة أو الأفكار الأساسية في هذا الجزء، والمبادئ المهمة، وأي أمثلة
+  عملية وردت فيه.
+- أنهِ بـ 1 إلى 3 نقاط قصيرة بعنوان "أهم ما يجب تذكره" خاصة بهذا الجزء فقط.
 """
 
 
-# =========================
-# BUSINESS
-# =========================
-
-def get_business_template_en() -> str:
-    return """Create strategic business notes from the transcript.
+def get_business_section_template_en() -> str:
+    return """Write the strategic business notes for THIS transcript section
+only. A separate assembly step will place your output under its own
+section heading, so start directly with the body content -- do not output
+any heading, title, or label of your own (no "#", "##", or similar)
+anywhere in your response.
 
 Rules:
-- Executive clarity.
-- Decision-focused.
-- No generic summaries.
-- Extract real value.
-
-Structure:
-
-# Strategic Overview
-Concise summary of what matters.
-
-## Core Problems Identified
-- Problem
-- Problem
-- Problem
-
-## Opportunities
-- Opportunity
-- Opportunity
-
-## Key Decisions
-- Decision + reasoning
-
-## Action Plan
-- Immediate actions
-- Short-term actions
-- Long-term actions
-
-## Risks
-Main risks or constraints discussed.
-
-## Strategic Insight
-One paragraph explaining the big-picture implication.
+- Executive clarity, decision-focused, no generic summaries.
+- Cover the problems/opportunities/decisions/risks actually discussed in
+  this section.
+- End with 1–3 short "Action items" bullets scoped to this section.
 """
 
 
-def get_business_template_ar() -> str:
-    return """أنشئ ملاحظات أعمال استراتيجية من النص.
+def get_business_section_template_ar() -> str:
+    return """اكتب ملاحظات الأعمال الاستراتيجية لهذا الجزء من النص فقط. خطوة
+تجميع منفصلة ستضع ناتجك تحت عنوان القسم الخاص بها، فابدأ مباشرة بالمحتوى
+نفسه — لا تكتب أي عنوان أو تصنيف خاص بك (لا تستخدم رمز # أو ## أو ما شابه)
+في أي مكان من إجابتك.
 
 القواعد:
-- وضوح تنفيذي.
-- تركيز على القرارات.
-- لا تلخص بشكل سطحي.
-
-البنية:
-
-# النظرة الاستراتيجية
-ملخص مختصر لما هو مهم.
-
-## المشكلات الأساسية
-- مشكلة
-- مشكلة
-
-## الفرص
-- فرصة
-- فرصة
-
-## القرارات الرئيسية
-- قرار + سبب
-
-## خطة العمل
-- إجراءات فورية
-- إجراءات قصيرة المدى
-- إجراءات طويلة المدى
-
-## المخاطر
-المخاطر أو القيود المذكورة.
-
-## الرؤية الاستراتيجية
-فقرة تشرح الأثر العام.
+- وضوح تنفيذي، تركيز على القرارات، بدون تلخيص سطحي.
+- اكتب بأسلوب عربي طبيعي وسليم، لا ترجمة حرفية.
+- غطِّ المشكلات والفرص والقرارات والمخاطر التي ورد ذكرها فعليًا في هذا الجزء.
+- أنهِ بـ 1 إلى 3 نقاط قصيرة بعنوان "إجراءات مقترحة" خاصة بهذا الجزء.
 """
 
 
-# =========================
-# RESEARCH
-# =========================
-
-def get_research_template_en() -> str:
-    return """Create analytical research notes from the transcript.
+def get_research_section_template_en() -> str:
+    return """Write the analytical research notes for THIS transcript section
+only. A separate assembly step will place your output under its own
+section heading, so start directly with the body content -- do not output
+any heading, title, or label of your own (no "#", "##", or similar)
+anywhere in your response.
 
 Rules:
-- Analytical tone.
-- Evidence-based.
-- Structured reasoning.
-- No invented citations.
-
-Structure:
-
-# Research Focus
-
-## Central Question
-What problem is being explored?
-
-## Argument or Hypothesis
-Core claim being made.
-
-## Supporting Evidence
-- Evidence
-- Evidence
-- Evidence
-
-## Logical Breakdown
-Explain how the argument develops step by step.
-
-## Implications
-Why this matters.
-
-## Limitations (If Mentioned)
-Constraints or uncertainties discussed.
-
-## Open Questions
-Unresolved areas or future directions.
+- Analytical tone, evidence-based, no invented citations.
+- Cover the question/argument/evidence actually discussed in this section.
+- End with 1–3 short "Open questions" bullets scoped to this section, if any.
 """
 
 
-def get_research_template_ar() -> str:
-    return """أنشئ ملاحظات بحثية تحليلية من النص.
+def get_research_section_template_ar() -> str:
+    return """اكتب الملاحظات البحثية التحليلية لهذا الجزء من النص فقط. خطوة
+تجميع منفصلة ستضع ناتجك تحت عنوان القسم الخاص بها، فابدأ مباشرة بالمحتوى
+نفسه — لا تكتب أي عنوان أو تصنيف خاص بك (لا تستخدم رمز # أو ## أو ما شابه)
+في أي مكان من إجابتك.
 
 القواعد:
-- نبرة تحليلية.
-- قائمة على الأدلة.
-- لا تضف مصادر غير موجودة.
-
-البنية:
-
-# محور البحث
-
-## السؤال المركزي
-ما المشكلة التي يتم بحثها؟
-
-## الفرضية أو الطرح
-الادعاء الأساسي.
-
-## الأدلة الداعمة
-- دليل
-- دليل
-- دليل
-
-## التحليل المنطقي
-اشرح تسلسل الحجة خطوة بخطوة.
-
-## الأثر
-لماذا هذا مهم؟
-
-## القيود (إن وجدت)
-القيود أو الشكوك المذكورة.
-
-## أسئلة مفتوحة
-نقاط تحتاج إلى بحث إضافي.
+- نبرة تحليلية، قائمة على الأدلة، بدون مصادر مختلقة.
+- اكتب بأسلوب عربي طبيعي وسليم، لا ترجمة حرفية.
+- غطِّ السؤال أو الحجة أو الأدلة التي ورد ذكرها فعليًا في هذا الجزء.
+- أنهِ بـ 1 إلى 3 نقاط قصيرة بعنوان "أسئلة مفتوحة" إن وُجدت، خاصة بهذا الجزء.
 """
 
 
-# =========================
-# TEMPLATE ROUTER
-# =========================
-
-def get_template(template_type: str, language: str = "en") -> str:
+def get_section_template(template_type: str, language: str = "en") -> str:
     if template_type not in TEMPLATE_TYPES:
         raise ValueError(
             f"Invalid template_type '{template_type}'. "
             f"Allowed: {', '.join(TEMPLATE_TYPES)}"
         )
-
     if language not in SUPPORTED_LANGUAGES:
         raise ValueError(
             f"Invalid language '{language}'. "
             f"Allowed: {', '.join(SUPPORTED_LANGUAGES)}"
         )
 
-    template_map: Dict[Tuple[str, str], Callable[[], str]] = {
-        ("educational", "en"): get_educational_template_en,
-        ("educational", "ar"): get_educational_template_ar,
-        ("business", "en"): get_business_template_en,
-        ("business", "ar"): get_business_template_ar,
-        ("research", "en"): get_research_template_en,
-        ("research", "ar"): get_research_template_ar,
+    section_template_map: Dict[Tuple[str, str], Callable[[], str]] = {
+        ("educational", "en"): get_educational_section_template_en,
+        ("educational", "ar"): get_educational_section_template_ar,
+        ("business", "en"): get_business_section_template_en,
+        ("business", "ar"): get_business_section_template_ar,
+        ("research", "en"): get_research_section_template_en,
+        ("research", "ar"): get_research_section_template_ar,
     }
 
-    return template_map[(template_type, language)]()
+    return section_template_map[(template_type, language)]()
+
+
+def get_overview_template(language: str = "en") -> str:
+    if language not in SUPPORTED_LANGUAGES:
+        raise ValueError(
+            f"Invalid language '{language}'. "
+            f"Allowed: {', '.join(SUPPORTED_LANGUAGES)}"
+        )
+
+    if language == "ar":
+        return """اكتب فقرة تمهيدية قصيرة (3 إلى 6 جمل) تلخص محتوى الفيديو بالكامل،
+بالاعتماد فقط على عناوين الأقسام المُعطاة لك. اكتبها بأسلوب عربي طبيعي
+وسليم، بدون حشو، وبدون تكرار حرفي لعناوين الأقسام."""
+
+    return """Write a short overview paragraph (3–6 sentences) summarizing the
+video as a whole, based only on the given section titles. Natural prose,
+no filler, don't just restate the section titles verbatim."""

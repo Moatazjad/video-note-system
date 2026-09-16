@@ -7,6 +7,66 @@ from app.core.config import settings
 
 class VideoService:
     @staticmethod
+    def get_duration(url: str) -> float:
+        ydl_opts = {
+            "quiet": not settings.DEBUG,
+            "no_warnings": not settings.DEBUG,
+            "skip_download": True,
+        }
+
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+                return float(info.get("duration", 0))
+        except Exception as exc:
+            raise RuntimeError(f"Failed to fetch video metadata: {exc}") from exc
+
+    @staticmethod
+    def download_audio_only(
+        url: str,
+        output_dir: Optional[Path] = None,
+        start_time: Optional[float] = None,
+        end_time: Optional[float] = None,
+    ) -> Tuple[Path, float]:
+        """Download ONLY the audio track (never video) via yt-dlp. When both
+        start_time and end_time are given, fetches just that slice from the
+        source instead of the whole audio."""
+        output_dir = output_dir or settings.UPLOAD_DIR
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        ydl_opts = {
+            "format": "bestaudio/best",
+            "outtmpl": str(output_dir / "%(id)s.%(ext)s"),
+            "postprocessors": [
+                {
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": "wav",
+                    "preferredquality": "0",
+                }
+            ],
+            "quiet": not settings.DEBUG,
+            "no_warnings": not settings.DEBUG,
+        }
+
+        if start_time is not None and end_time is not None:
+            ydl_opts["download_ranges"] = yt_dlp.utils.download_range_func(
+                None, [(start_time, end_time)]
+            )
+            ydl_opts["force_keyframes_at_cuts"] = True
+
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+                filename = Path(ydl.prepare_filename(info))
+                audio_path = filename.with_suffix(".wav")
+                duration = float(info.get("duration", 0))
+
+            return audio_path, duration
+
+        except Exception as exc:
+            raise RuntimeError(f"Audio download failed: {exc}") from exc
+
+    @staticmethod
     def download_video(
         url: str,
         output_dir: Optional[Path] = None

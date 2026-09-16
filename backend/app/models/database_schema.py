@@ -9,6 +9,7 @@ from sqlalchemy import (
     Float,
     CheckConstraint,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 from sqlalchemy import Boolean
@@ -76,6 +77,10 @@ class ProcessedContent(Base):
     notes = Column(Text, nullable=True)
     detected_language = Column(String(50), nullable=True)
 
+    segments = Column(JSONB, nullable=True)
+    topics = Column(JSONB, nullable=True)
+    transcript_source = Column(String(16), nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(
         DateTime,
@@ -84,3 +89,41 @@ class ProcessedContent(Base):
     )
 
     video = relationship("Video", back_populates="processed_content")
+
+
+class NoteTranslation(Base):
+    __tablename__ = "note_translations"
+    __table_args__ = (
+        CheckConstraint("language IN ('en', 'ar')", name="check_translation_language"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    video_id = Column(
+        Integer,
+        ForeignKey("videos.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    language = Column(String(5), nullable=False)
+    content = Column(Text, nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+    __table_args__ = (
+        CheckConstraint("role IN ('user', 'assistant')", name="check_chat_role"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    video_id = Column(
+        Integer,
+        ForeignKey("videos.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    role = Column(String(16), nullable=False)
+    content = Column(Text, nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)

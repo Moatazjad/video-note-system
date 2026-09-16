@@ -150,7 +150,7 @@ Taking notes while driving or during activities that prevent manual note-taking 
 
 \- Groq Whisper Large-v3 (transcription)
 
-\- Groq LLaMA 3.3 70B (note generation)
+\- Groq gpt-oss-120b (note generation; originally Groq LLaMA 3.3 70B, deprecated by Groq after submission)
 
 
 

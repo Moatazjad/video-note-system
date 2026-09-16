@@ -6,12 +6,12 @@ from sqlalchemy.orm import Session
 
 
 from app.core.celery_app import celery_app
+from app.core.config import settings
 from app.core.database import SessionLocal
 from app.services.video_service import VideoService
-from app.services.transcription_service import TranscriptionService
+from app.services import transcript_acquisition_service
 from app.services.note_service import NoteService
 from app.services.export_service import ExportService
-from app.services.audio_chunker import AudioChunker
 from app.models.database_schema import Video, ProcessedContent
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,6 @@ STATUS_COMPLETED = "completed"
 STATUS_FAILED = "failed"
 STATUS_CANCELLED = "cancelled"
 
-MAX_DURATION = 1200
 DURATION_TOLERANCE = 2
 
 SAFE_ROOT = Path(os.getenv("OUTPUT_DIR", "outputs")).resolve()
@@ -107,7 +106,6 @@ def check_cancellation(db: Session, video_id: int) -> bool:
 @celery_app.task(bind=True, base=DatabaseTask, max_retries=3)
 def process_video_task(self, video_id: int):
     db = self.db
-    chunk_paths = []
 
     try:
         video = (
@@ -127,84 +125,79 @@ def process_video_task(self, video_id: int):
 
         video.status = STATUS_PROCESSING
         video.progress = 10
-        video.current_step = "Downloading video"
+        video.current_step = "Checking video length"
         db.commit()
 
         if check_cancellation(db, video_id):
             return
 
-        video_path, audio_path, duration = VideoService.process_video(
+        if video.start_time is not None and video.end_time is not None:
+            expected_duration = video.end_time - video.start_time
+        else:
+            expected_duration = VideoService.get_duration(video.url)
+
+        max_duration = settings.MAX_VIDEO_DURATION_SECONDS
+        if expected_duration > max_duration + DURATION_TOLERANCE:
+            video.status = STATUS_FAILED
+            video.progress = 0
+            video.current_step = None
+            video.error_message = f"Video exceeds {max_duration // 60} minute limit"
+            db.commit()
+            logger.warning(
+                f"Duration limit (pre-download): video_id={video_id}, "
+                f"expected_duration={expected_duration}s"
+            )
+            return
+
+        video.duration = expected_duration
+        video.progress = 20
+        video.current_step = "Fetching transcript"
+        db.commit()
+
+        (
+            full_transcript,
+            segments,
+            transcript_source,
+            detected_language,
+            audio_path,
+        ) = transcript_acquisition_service.acquire(
             url=video.url,
+            language=video.language,
             start_time=video.start_time,
             end_time=video.end_time,
         )
 
-        if duration > MAX_DURATION + DURATION_TOLERANCE:
-            video.status = STATUS_FAILED
-            video.current_step = None
-            video.error_message = "Video exceeds 20 minute limit"
-            db.commit()
-            logger.warning(f"Duration limit: video_id={video_id}, duration={duration}s")
-            return
+        if audio_path:
+            video.audio_path = str(audio_path)
 
-        video.video_path = str(video_path)
-        video.audio_path = str(audio_path)
-        video.duration = duration
-        video.progress = 30
-        video.current_step = "Video downloaded"
+        video.progress = 50
+        video.current_step = (
+            "Transcript acquired via captions"
+            if transcript_source == "captions"
+            else "Transcribed via speech recognition"
+        )
         db.commit()
 
-        if check_cancellation(db, video_id):
-            return
-
-        video.progress = 40
-        video.current_step = "Preparing transcription"
-        db.commit()
-
-        chunk_paths = AudioChunker.split_audio(Path(audio_path))
-        if not chunk_paths:
-            raise RuntimeError("Audio chunking produced no chunks")
-
-        transcripts = []
-
-        for i, chunk_path in enumerate(chunk_paths):
-            if check_cancellation(db, video_id):
-                AudioChunker.cleanup_chunks(chunk_paths)
-                return
-
-            video.progress = 40 + int(((i + 1) / len(chunk_paths)) * 20)
-            video.current_step = f"Transcribing chunk {i+1}/{len(chunk_paths)}"
-            db.commit()
-
-            transcript_text, detected_lang = TranscriptionService.transcribe(
-               audio_path=Path(chunk_path),
-               language=video.language,
-            )
-            transcripts.append(transcript_text)
-
-        if len(chunk_paths) > 1:
-            AudioChunker.cleanup_chunks(chunk_paths)
-
-        full_transcript = " ".join(transcripts)
-        if not full_transcript.strip():
-            raise RuntimeError("Empty transcription result")
-
-        logger.info(f"Transcribed: video_id={video_id}, length={len(full_transcript)}")
-
-        if check_cancellation(db, video_id):
-            return
-
-        video.progress = 70
-        video.current_step = "Generating notes"
-        db.commit()
-
-        notes = NoteService.generate_notes(
-            transcript=full_transcript,
-            language=video.language,
-            template_type=video.template_type,
+        logger.info(
+            f"Transcript acquired: video_id={video_id}, source={transcript_source}, "
+            f"length={len(full_transcript)}"
         )
 
-        video.progress = 80
+        if check_cancellation(db, video_id):
+            return
+
+        video.progress = 60
+        video.current_step = "Segmenting topics and writing notes"
+        db.commit()
+
+        notes, topics = NoteService.generate_structured_notes(
+            segments=segments,
+            template_type=video.template_type,
+            language=video.language,
+            duration=expected_duration,
+        )
+
+        video.progress = 85
         video.current_step = "Notes generated"
         db.commit()
 
@@ -221,14 +214,8 @@ def process_video_task(self, video_id: int):
             language=video.language,
         )
 
-        if video.video_path and safe_delete_file(video.video_path, "video file"):
-            video.video_path = None
-
         if video.audio_path and safe_delete_file(video.audio_path, "audio file"):
             video.audio_path = None
-
-        language_map = {"en": "english", "ar": "arabic"}
-        detected_language = language_map.get(video.language, video.language)
 
         existing = db.query(ProcessedContent).filter(
             ProcessedContent.video_id == video_id
@@ -238,6 +225,9 @@ def process_video_task(self, video_id: int):
             existing.transcript = full_transcript
             existing.notes = notes
             existing.detected_language = detected_language
+            existing.segments = segments
+            existing.topics = topics
+            existing.transcript_source = transcript_source
         else:
             db.add(
                 ProcessedContent(
@@ -245,6 +235,9 @@ def process_video_task(self, video_id: int):
                     transcript=full_transcript,
                     notes=notes,
                     detected_language=detected_language,
+                    segments=segments,
+                    topics=topics,
+                    transcript_source=transcript_source,
                 )
             )
 
@@ -268,9 +261,6 @@ def process_video_task(self, video_id: int):
         logger.error(f"Processing error: video_id={video_id}", exc_info=True)
 
         db.rollback()
-
-        if chunk_paths:
-            AudioChunker.cleanup_chunks(chunk_paths)
 
         video = db.query(Video).filter(Video.id == video_id).first()
 

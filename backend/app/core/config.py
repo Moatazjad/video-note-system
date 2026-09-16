@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str | None = None
     GROQ_API_KEY: str | None = None
 
+    MAX_VIDEO_DURATION_SECONDS: int = 7200
+
     UPLOAD_DIR: Path = BASE_DIR / "uploads"
     OUTPUT_DIR: Path = BASE_DIR / "outputs"
     LOG_DIR: Path = BASE_DIR / "logs"

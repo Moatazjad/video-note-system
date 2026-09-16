@@ -4,14 +4,47 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Video } from 'lucide-react';
+import { Loader2, TriangleAlert } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { validateVideoRequest } from '@/lib/validation';
 import type { VideoProcessRequest, Language, TemplateType } from '@/types/video';
 
 interface VideoFormProps {
   onSubmit: (request: VideoProcessRequest) => Promise<void>;
   isSubmitting: boolean;
+}
+
+function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+  disabled,
+}: {
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex w-fit rounded-lg border border-border overflow-hidden">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          disabled={disabled}
+          onClick={() => onChange(opt.value)}
+          className={cn(
+            'px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50',
+            value === opt.value
+              ? 'grad-accent-bg text-[oklch(0.14_0.02_265)]'
+              : 'bg-transparent text-muted-foreground hover:text-foreground'
+          )}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export function VideoForm({ onSubmit, isSubmitting }: VideoFormProps) {
@@ -45,20 +78,11 @@ export function VideoForm({ onSubmit, isSubmitting }: VideoFormProps) {
   };
 
   return (
-    <Card className="shadow-lg">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Video className="w-6 h-6" />
-          Process Video
-        </CardTitle>
-        <CardDescription>
-          Enter a YouTube URL to generate structured notes
-        </CardDescription>
-      </CardHeader>
+    <Card className="border-border/60 bg-card/90 backdrop-blur-md shadow-xl">
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Video URL</label>
+            <label className="text-sm font-medium text-muted-foreground">Video URL</label>
             <Input
               type="url"
               placeholder="https://www.youtube.com/watch?v=..."
@@ -71,7 +95,7 @@ export function VideoForm({ onSubmit, isSubmitting }: VideoFormProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Start Time (seconds)</label>
+              <label className="text-sm font-medium text-muted-foreground">Start time (sec)</label>
               <Input
                 type="number"
                 placeholder="0"
@@ -85,12 +109,12 @@ export function VideoForm({ onSubmit, isSubmitting }: VideoFormProps) {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">End Time (seconds)</label>
+              <label className="text-sm font-medium text-muted-foreground">End time (sec)</label>
               <Input
                 type="number"
-                placeholder="Max 1200 (20 min)"
+                placeholder="Max 7200"
                 min="0"
-                max="1200"
+                max="7200"
                 value={formData.end_time || ''}
                 onChange={(e) => setFormData({
                   ...formData,
@@ -101,58 +125,47 @@ export function VideoForm({ onSubmit, isSubmitting }: VideoFormProps) {
             </div>
           </div>
 
-          <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md">
-            <p className="text-sm text-amber-800 dark:text-amber-200">
-              ⚠️ <strong>Limit:</strong> Videos are limited to 20 minutes max.
-            </p>
+          <div className="flex items-start gap-2.5 rounded-lg border border-primary/30 bg-primary/10 p-3">
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <p className="text-sm text-foreground">2 hour limit per video.</p>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Language</label>
-            <Select
-              value={formData.language}
-              onValueChange={(value: Language) => setFormData({ ...formData, language: value })}
+            <label className="text-sm font-medium text-muted-foreground">Language</label>
+            <Segmented
+              options={[
+                { value: 'en', label: 'English' },
+                { value: 'ar', label: 'العربية' },
+              ]}
+              value={formData.language as Language}
+              onChange={(value) => setFormData({ ...formData, language: value })}
               disabled={isSubmitting}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="en">English</SelectItem>
-                <SelectItem value="ar">Arabic</SelectItem>
-              </SelectContent>
-            </Select>
+            />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Note Template</label>
-            <Select
-              value={formData.template_type}
-              onValueChange={(value: TemplateType) =>
-                setFormData({ ...formData, template_type: value })
-              }
+            <label className="text-sm font-medium text-muted-foreground">Note template</label>
+            <Segmented
+              options={[
+                { value: 'educational', label: 'Educational' },
+                { value: 'business', label: 'Business' },
+                { value: 'research', label: 'Research' },
+              ]}
+              value={formData.template_type as TemplateType}
+              onChange={(value) => setFormData({ ...formData, template_type: value })}
               disabled={isSubmitting}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="educational">Educational</SelectItem>
-                <SelectItem value="business">Business</SelectItem>
-                <SelectItem value="research">Research</SelectItem>
-              </SelectContent>
-            </Select>
+            />
           </div>
 
           {error && (
-            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-              <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+            <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4">
+              <p className="text-sm text-destructive">{error}</p>
             </div>
           )}
 
           <Button
             type="submit"
-            className="w-full"
+            className="grad-accent-bg glow-accent w-full border-0 text-[oklch(0.14_0.02_265)] hover:opacity-90"
             disabled={isSubmitting}
             size="lg"
           >

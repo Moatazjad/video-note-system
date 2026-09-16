@@ -9,7 +9,7 @@ const YOUTUBE_DOMAINS = [
   'youtu.be',
 ];
 
-const MAX_DURATION = 1200; // 20 minutes in seconds
+const MAX_DURATION = 7200; // 2 hours in seconds
 
 export interface ValidationError {
   field: string;
@@ -85,9 +85,10 @@ export function validateTimeSegment(
     
     const duration = endTime - startTime;
     if (duration > MAX_DURATION) {
+      const hours = MAX_DURATION / 3600;
       return {
         field: 'end_time',
-        message: `Video segment cannot exceed ${MAX_DURATION / 60} minutes`,
+        message: `Video segment cannot exceed ${hours} hour${hours === 1 ? '' : 's'}`,
       };
     }
   }

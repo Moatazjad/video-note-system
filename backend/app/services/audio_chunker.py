@@ -7,7 +7,7 @@ import math
 logger = logging.getLogger(__name__)
 
 CHUNK_DURATION = 600
-MAX_CHUNKS = 10
+MAX_CHUNKS = 13
 FFMPEG_TIMEOUT = 300
 FFPROBE_TIMEOUT = 30
 
@@ -104,9 +104,9 @@ class AudioChunker:
 
             duration = float(result.stdout.strip())
 
-            if duration <= 0 or duration > 7200:
+            if duration <= 0 or duration > 7260:
                 raise ValueError(
-                    f"Duration {duration}s outside valid range (0, 7200]"
+                    f"Duration {duration}s outside valid range (0, 7260]"
                 )
 
             return duration

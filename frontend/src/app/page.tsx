@@ -16,16 +16,27 @@ export default function Home() {
   } = useVideoJob();
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto">
+    <main className="relative min-h-screen overflow-hidden bg-background">
+      <div
+        className="bg-glow -top-40 -right-32 h-[420px] w-[420px] opacity-35"
+        style={{ backgroundImage: "radial-gradient(circle at 30% 30%, var(--accent-grad-1), transparent 70%)" }}
+      />
+      <div
+        className="bg-glow -bottom-48 -left-32 h-[380px] w-[380px] opacity-25"
+        style={{ backgroundImage: "radial-gradient(circle at 60% 60%, var(--accent-grad-2), transparent 70%)" }}
+      />
+      <div className="relative container mx-auto px-4 py-16">
+        <div className="max-w-2xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
+          <div className="mb-10">
+            <div className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
               Video Note System
+            </div>
+            <h1 className="mt-2 font-display text-3xl font-bold text-foreground">
+              Process a video
             </h1>
-            <p className="text-lg text-slate-600 dark:text-slate-300">
-              Transform educational videos into structured notes
+            <p className="mt-2 text-sm text-muted-foreground">
+              Paste a YouTube link — get structured notes back.
             </p>
           </div>
 

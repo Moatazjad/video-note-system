@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, HttpUrl, model_validator, computed_field
-from typing import Optional, Literal
+from typing import Optional, Literal, List, Dict, Any
 from datetime import datetime
 
 
@@ -44,6 +44,8 @@ class VideoResultResponse(BaseModel):
     transcript: Optional[str] = None
     notes: Optional[str] = None
     detected_language: Optional[str] = None
+    transcript_source: Optional[str] = None
+    topics: Optional[List[Dict[str, Any]]] = None
     duration: Optional[float] = None
     created_at: datetime
 
@@ -69,3 +71,30 @@ class HealthResponse(BaseModel):
     status: str
     timestamp: datetime
     version: str
+
+
+class ChatMessageCreate(BaseModel):
+    message: str = Field(..., min_length=1, max_length=2000)
+
+
+class ChatMessageResponse(BaseModel):
+    id: int
+    role: str
+    content: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ChatHistoryResponse(BaseModel):
+    messages: List[ChatMessageResponse]
+
+
+class TranslateRequest(BaseModel):
+    target_language: Literal["en", "ar"]
+
+
+class TranslateResponse(BaseModel):
+    language: str
+    content: str

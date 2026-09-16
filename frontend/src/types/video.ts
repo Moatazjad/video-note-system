@@ -38,16 +38,31 @@ export interface VideoStatus {
   error_message: string | null;
 }
 
+export interface Topic {
+  title: string;
+  start: number;
+  end: number;
+}
+
 export interface VideoResult {
   id: number;
   url: string;
   status: JobStatus;
   notes: string | null;
   detected_language: string | null;
+  transcript_source: string | null;
+  topics: Topic[] | null;
   duration: number | null;
   created_at: string;
   markdown_url: string | null;
   pdf_url: string | null;
+}
+
+export interface ChatMessage {
+  id: number;
+  role: 'user' | 'assistant';
+  content: string;
+  created_at: string;
 }
 
 export interface VideoJobState {

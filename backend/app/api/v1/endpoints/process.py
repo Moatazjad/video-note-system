@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from urllib.parse import urlparse, parse_qs
 import logging
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.models.database_schema import Video
 from app.models.schemas import VideoProcessRequest, VideoStatusResponse
@@ -12,13 +13,21 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 STATUS_PENDING = "pending"
-MAX_DURATION = 1200
 
 
 def normalize_youtube_url(url: str) -> str:
     parsed = urlparse(url)
-    query_params = parse_qs(parsed.query)
-    video_id = query_params.get('v', [None])[0]
+    host = parsed.netloc.lower()
+    video_id = None
+
+    if host in ("youtu.be", "www.youtu.be"):
+        video_id = parsed.path.strip("/").split("/")[0] or None
+    else:
+        query_params = parse_qs(parsed.query)
+        video_id = query_params.get('v', [None])[0]
+
+        if not video_id and "/shorts/" in parsed.path:
+            video_id = parsed.path.rstrip("/").split("/")[-1] or None
 
     if not video_id:
         raise ValueError("Invalid YouTube URL: missing video ID")
@@ -54,10 +63,11 @@ async def process_video(
 
     if request.start_time is not None and request.end_time is not None:
         duration = request.end_time - request.start_time
-        if duration > MAX_DURATION:
+        max_duration = settings.MAX_VIDEO_DURATION_SECONDS
+        if duration > max_duration:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Video segment cannot exceed {MAX_DURATION // 60} minutes",
+                detail=f"Video segment cannot exceed {max_duration // 60} minutes",
             )
 
     video = Video(
