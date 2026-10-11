@@ -26,6 +26,14 @@ VALID_TEMPLATES = {"educational", "business", "research"}
 # retry cannot fix -- only a smaller request can.
 MAX_TOPIC_INPUT_CHARS = 4000
 MAX_SECTION_EXCERPT_CHARS = 3000
+# Long videos are coarsened into at most this many timestamped chunks for
+# topic segmentation, so every part of the video fits in the budget above
+# with enough text per chunk to recognise what it is about.
+MAX_TOPIC_CHUNKS = 60
+SECTION_EXCERPT_WINDOWS = 6
+# Translation is split at section headings into parts of about this size,
+# translated one after another (same shared-budget reasoning as above).
+MAX_TRANSLATE_CHUNK_CHARS = 3500
 SEQUENTIAL_CALL_DELAY_SECONDS = 1.5
 
 _REPEATED_CHAR_RE = re.compile(r"(.)\1{9,}")
@@ -76,21 +84,54 @@ def _coarsen_segments(segments: List[Dict], chunk_seconds: float = COARSE_CHUNK_
 def _truncate(text: str, max_chars: int) -> str:
     if len(text) <= max_chars:
         return text
-    return text[:max_chars] + " …"
+    cut = text[:max_chars]
+    # Cut at a word boundary so excerpts don't end mid-word.
+    if " " in cut[max_chars // 2:]:
+        cut = cut[:cut.rfind(" ")]
+    return cut + " …"
+
+
+def _fit_evenly(texts: List[str], budget: int) -> List[str]:
+    """Shrink a list of texts to fit `budget` total chars by giving every
+    piece a fair share (short pieces keep all their text, the leftover goes
+    to longer ones). Unlike truncating the joined string, this keeps content
+    from the WHOLE span -- head-truncation silently dropped everything after
+    the first few minutes of a long video."""
+    if sum(len(t) for t in texts) <= budget:
+        return texts
+
+    limits = [0] * len(texts)
+    remaining = budget
+    order = sorted(range(len(texts)), key=lambda i: len(texts[i]))
+    for pos, i in enumerate(order):
+        share = remaining // (len(texts) - pos)
+        limits[i] = min(len(texts[i]), share)
+        remaining -= limits[i]
+
+    return [_truncate(t, lim) if lim > 0 else "" for t, lim in zip(texts, limits)]
 
 
 def _transcript_with_markers(coarse_segments: List[Dict], max_chars: int = MAX_TOPIC_INPUT_CHARS) -> str:
-    full = "\n".join(
-        f"[{_format_seconds(seg['start'])}] {seg['text']}" for seg in coarse_segments
-    )
-    return _truncate(full, max_chars)
+    markers = [f"[{_format_seconds(seg['start'])}] " for seg in coarse_segments]
+    overhead = sum(len(m) for m in markers) + len(markers)  # + newlines
+    texts = _fit_evenly([seg["text"] for seg in coarse_segments], max(0, max_chars - overhead))
+    return "\n".join(m + t for m, t in zip(markers, texts))
 
 
 def _slice_transcript(
     segments: List[Dict], start: float, end: float, max_chars: int = MAX_SECTION_EXCERPT_CHARS
 ) -> str:
     texts = [seg["text"] for seg in segments if seg["start"] < end and seg["end"] > start]
-    return _truncate(" ".join(texts), max_chars)
+    full = " ".join(texts)
+    if len(full) <= max_chars:
+        return full
+
+    # Too long for one call: sample evenly spaced passages across the whole
+    # section instead of keeping only its opening.
+    n_windows = min(SECTION_EXCERPT_WINDOWS, len(texts))
+    size = math.ceil(len(texts) / n_windows)
+    windows = [" ".join(texts[i:i + size]) for i in range(0, len(texts), size)]
+    return " … ".join(_fit_evenly(windows, max_chars - 3 * (len(windows) - 1)))
 
 
 def _strip_json_fence(text: str) -> str:
@@ -109,9 +150,18 @@ def _deterministic_sections(duration: float, part_seconds: float = 900) -> Tuple
     ]
 
 
+def _target_section_count(span_seconds: float) -> int:
+    # Roughly one section per 1.5 minutes, kept between 3 and 12 so short
+    # clips aren't split per caption chunk and long ones stay readable (and
+    # within the rate limit, since each section is its own LLM call).
+    return max(3, min(12, round(span_seconds / 90)))
+
+
 def _segment_topics(segments: List[Dict], duration: float) -> Tuple[str, List[Dict]]:
-    coarse = _coarsen_segments(segments)
+    span = max(segments[-1]["end"] - segments[0]["start"], 1.0)
+    coarse = _coarsen_segments(segments, max(COARSE_CHUNK_SECONDS, span / MAX_TOPIC_CHUNKS))
     transcript_text = _transcript_with_markers(coarse)
+    target = _target_section_count(span)
 
     system_prompt = (
         "You segment a timestamped video transcript into coherent topic "
@@ -121,8 +171,11 @@ def _segment_topics(segments: List[Dict], duration: float) -> Tuple[str, List[Di
         "transcript from its first to its last timestamp. Every start/end "
         "MUST be one of the timestamps (in seconds) already present in the "
         "transcript below -- never invent a timestamp. Prefer real semantic "
-        "topic boundaries over fixed-length slices. No prose, no markdown "
-        "fences, JSON only."
+        "topic boundaries over fixed-length slices. "
+        f"Aim for about {target} sections (fewer if the video genuinely "
+        "covers fewer topics); never make a section per line. Long passages "
+        "may be shortened with '…' -- the transcript still spans the whole "
+        "video. No prose, no markdown fences, JSON only."
     )
 
     client = get_groq_client()
@@ -139,7 +192,10 @@ def _segment_topics(segments: List[Dict], duration: float) -> Tuple[str, List[Di
                 ],
                 response_format={"type": "json_object"},
                 temperature=0.2,
-                max_tokens=1024,
+                # Reasoning tokens count toward max_tokens; too small a
+                # limit left the JSON empty ("json_validate_failed").
+                max_tokens=4096,
+                reasoning_effort="low",
             ))
             content = _strip_json_fence(resp.choices[0].message.content or "")
             data = json.loads(content)
@@ -276,21 +332,57 @@ def translate_notes(content: str, target_language: str) -> str:
         "commentary."
     )
 
-    response = with_rate_limit_retry(lambda: client.chat.completions.create(
-        model=MODEL,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": content},
-        ],
-        temperature=0.3,
-        frequency_penalty=0.4,
-        max_tokens=4096,
-    ))
-
-    translated = response.choices[0].message.content
-    if not translated or not translated.strip():
+    def translate_part(part: str) -> str:
+        # gpt-oss is a reasoning model: its hidden reasoning shares
+        # max_tokens with the answer, so a whole document could use up the
+        # limit before any translation was written (an empty response).
+        # Small parts, low reasoning effort and one retry avoid that.
+        for attempt in range(2):
+            response = with_rate_limit_retry(lambda: client.chat.completions.create(
+                model=MODEL,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": part},
+                ],
+                temperature=0.3,
+                frequency_penalty=0.4,
+                max_tokens=4096,
+                reasoning_effort="low",
+            ))
+            translated = response.choices[0].message.content
+            if translated and translated.strip():
+                return translated.strip()
+            logger.warning(
+                f"Empty translation (attempt {attempt + 1}/2, "
+                f"finish_reason={response.choices[0].finish_reason})"
+            )
         raise RuntimeError("Empty response from translation model")
-    return collapse_repetition(translated.strip())
+
+    parts = _split_markdown(content, MAX_TRANSLATE_CHUNK_CHARS)
+    translated_parts = []
+    for i, part in enumerate(parts):
+        translated_parts.append(translate_part(part))
+        if i < len(parts) - 1:
+            time.sleep(SEQUENTIAL_CALL_DELAY_SECONDS)
+
+    return collapse_repetition("\n\n".join(translated_parts))
+
+
+def _split_markdown(content: str, max_chars: int) -> List[str]:
+    """Split a Markdown document at its '## ' headings into parts of at most
+    ~max_chars, never cutting a section in half."""
+    sections = re.split(r"\n(?=## )", content.strip())
+    parts: List[str] = []
+    current = ""
+    for section in sections:
+        if current and len(current) + len(section) > max_chars:
+            parts.append(current)
+            current = section
+        else:
+            current = f"{current}\n\n{section}" if current else section
+    if current:
+        parts.append(current)
+    return parts
 
 
 class NoteService:

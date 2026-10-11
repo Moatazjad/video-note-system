@@ -23,10 +23,11 @@ MAX_CONTEXT_CHARS = 6000
 
 
 def _system_prompt(context_text: str, language: str) -> str:
+    default_language = "Arabic" if language == "ar" else "English"
     language_instruction = (
-        "Respond in Arabic unless the user writes in another language."
-        if language == "ar"
-        else "Respond in English unless the user writes in another language."
+        "Always reply in the same language as the user's latest message -- "
+        "this includes the polite refusal for off-topic questions. If the "
+        f"language is unclear, reply in {default_language}."
     )
 
     if len(context_text) > MAX_CONTEXT_CHARS:
